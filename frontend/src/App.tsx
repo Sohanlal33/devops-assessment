@@ -3,6 +3,9 @@ import axios from 'axios'
 import { Server, Globe, RefreshCw, CheckCircle2 } from 'lucide-react'
 import './App.css'
 
+const API_URL = import.meta.env.VITE_API_URL;
+
+
 function App() {
   const [message, setMessage] = useState<string>('')
   const [loading, setLoading] = useState<boolean>(true)
@@ -12,7 +15,7 @@ function App() {
     setLoading(true)
     setError(null)
     try {
-      const response = await axios.get('http://localhost:8000/api/hello/')
+      const response = await axios.get(`${API_URL}/api/hello/`)
       setMessage(response.data.message)
     } catch (err) {
       console.error(err)
@@ -76,3 +79,4 @@ function App() {
 }
 
 export default App
+
