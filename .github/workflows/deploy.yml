@@ -39,7 +39,7 @@ jobs:
           push: true
           tags: sohanlal33/devops-frontend:v1.0.0
 
-  deploy:
+    deploy:
     runs-on: ubuntu-latest
     needs: build-and-push
     steps:
@@ -49,7 +49,7 @@ jobs:
           role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/nexgen-github-oidc-role
           aws-region: ap-south-1
 
-      - - name: Run deployment commands on EC2 via AWS SSM
+      - name: Run deployment commands on EC2 via AWS SSM
         run: |
           aws ssm send-command \
             --instance-ids "${{ secrets.INSTANCE_ID }}" \
@@ -57,3 +57,4 @@ jobs:
             --comment "Final stable deployment" \
             --region ap-south-1 \
             --parameters '{"commands":["cd /home/ubuntu/devops-assessment && sudo git fetch origin main && sudo git reset --hard origin/main","export DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}","export DOCKERHUB_TOKEN=${{ secrets.DOCKERHUB_TOKEN }}","sudo -E bash deploy.sh"]}'
+  
