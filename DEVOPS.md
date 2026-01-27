@@ -20,9 +20,9 @@
 
 
 2. Create a `.env` file in the root directory based on `.env.example` with environment variables.
-   DJANGO_SECRET_KEY=your_secret_key_here
-   DJANGO_DEBUG=True
-   DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1
+   DJANGO_SECRET_KEY=your_secret_key_here,
+   DJANGO_DEBUG=True,
+   DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,
 
 3. Build and run containers locally using Docker Compose:
    Run the deployment script to automate update and start containers:
@@ -53,9 +53,26 @@
 - SSH into your server.
 - Pull the repository.
 - Ensure Docker and Docker Compose are installed.
-- Create the `.env` file with required environment variables.
-- Run the deployment script:
-  ./deploy.sh
+
+---
+
+## Infrastructure Provisioning and Automated Deployment
+
+Terraform is used to provision the cloud infrastructure, and a bootstrap script is used to prepare the EC2 instance for containerized deployment.
+
+### Provision Infrastructure (Terraform)
+```bash
+cd terraform
+terraform init
+terraform apply
+
+The install_docker.sh script installs and configures Docker on the instance.
+The deploy.sh script pulls images and deploys services using Docker Compose.
+CI/CD validation is handled through GitHub Actions on every push to the main branch.
+
+Instance Setup and Application Deployment:
+ - ssh -i <key>.pem ec2-user@<elastic-ip>
+ - git clone https://github.com/Sohanlal33/devops-assessment.git
 
   - Application will be accessible on the configured ports.
 
@@ -99,7 +116,7 @@
 - Dockerfiles for frontend and backend with multi-stage builds.
 - `docker-compose.yml` orchestrating both services with proper networking and health checks.
 - GitHub Actions workflow in `.github/workflows/`.
-- Terraform files (if applicable).
+- Terraform files.
 - Deployed URL (if deployed to cloud).
 - Screenshot of the running application in production/local environment.
 - `DEVOPS.md` with setup and troubleshooting details.
