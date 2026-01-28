@@ -1,4 +1,4 @@
-set -e
+
 cd /home/ubuntu/devops-assessment
 
 echo "Creating runtime .env file..."
