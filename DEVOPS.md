@@ -70,12 +70,28 @@ The install_docker.sh script installs and configures Docker on the instance.
 The deploy.sh script pulls images and deploys services using Docker Compose.
 CI/CD validation is handled through GitHub Actions on every push to the main branch.
 
+Using Self-Hosted Runner for CI/CD:
+  To improve deployment reliability and reduce external dependencies, a self-hosted GitHub Actions runner is configured on the AWS EC2 instance. This runner:
+  Executes the CI/CD workflow directly within the deployment environment.
+  Enables seamless orchestration with the deployed Docker environment.
+  Avoids SSH key transfer complexities by running workflows locally on the server.
+  Setup steps:
+  Register the GitHub Actions runner on the EC2 instance following GitHub's official instructions
+  The workflow file (.github/workflows/deploy.yml) is configured with runs-on: self-hosted to utilize this runner.
+  Deployment and orchestration commands are executed locally, simplifying environment variable management and Docker Compose usage.   
+
 Instance Setup and Application Deployment:
  - ssh -i <key>.pem ec2-user@<elastic-ip>
  - git clone https://github.com/Sohanlal33/devops-assessment.git
 
   - Application will be accessible on the configured ports.
 
+  Deployment Environment: AWS EC2
+  The application is deployed on an AWS EC2 instance provisioned via Terraform.
+  Docker and Docker Compose are installed and configured automatically during instance bootstrap.
+  Docker images are pulled from GitHub Container Registry (GHCR) and orchestrated using Docker Compose on the EC2 host.
+  The EC2 instance serves both backend and frontend services on configured ports.
+  The deployment script (deploy.sh) is executed on the EC2 instance either manually or automatically via GitHub Actions.
 ---
 
 ## 2. Troubleshooting Log
@@ -102,7 +118,9 @@ Instance Setup and Application Deployment:
 - GitHub Actions workflow builds and pushes Docker images on every push to the main branch.
 - Deployment automation via a shell script (`deploy.sh`) for local/self-hosted deployment.
 - - The GitHub Actions CI/CD pipeline has been thoroughly tested to build, push, and deploy images on every fresh push to the main branch, ensuring continuous delivery and integration.
-
+  - The CI/CD pipeline utilizes a self-hosted GitHub Actions runner on AWS EC2 for direct deployment, enhancing security by minimizing exposure of secrets and SSH keys.
+  - The approach ensures faster feedback loops and avoids common SSH connectivity issues.
+  - Terraform automates infrastructure provisioning, while shell scripts automate Docker environment setup and container lifecycle management.
 
 - **Documentation:**
 - This file provides clear instructions to run and troubleshoot.
