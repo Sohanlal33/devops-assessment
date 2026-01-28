@@ -21,7 +21,7 @@
 
 2. Create a `.env` file in the root directory based on `.env.example` with environment variables.
    DJANGO_SECRET_KEY=your_secret_key_here,
-   DJANGO_DEBUG=True,
+   DJANGO_DEBUG=FALSE,
    DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,
 
 3. Build and run containers locally using Docker Compose:
