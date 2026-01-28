@@ -41,13 +41,27 @@ jobs:
           push: true
           tags: ghcr.io/sohanlal33/devops-frontend:latest
 
-      - name: Deploy using docker-compose
+      - name: Deploy using Docker Compose
         run: |
           set -e
           cd /home/ubuntu/devops-assessment
-          docker-compose pull
-          docker-compose up -d
+
+          echo "Creating runtime .env file..."
+          cat > .env <<EOF
+          DJANGO_SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }}
+          DJANGO_DEBUG=${{ secrets.DJANGO_DEBUG }}
+          DJANGO_ALLOWED_HOSTS=${{ secrets.DJANGO_ALLOWED_HOSTS }}
+          EOF
+
+          ls -l .env
+
+          docker compose pull
+          docker compose up -d
+
           sleep 10
+
           curl -f http://localhost || { echo "Frontend health check failed"; exit 1; }
           curl -f http://localhost:8000/api/hello/ || { echo "Backend health check failed"; exit 1; }
+
+          echo "Deployment completed successfully"
 

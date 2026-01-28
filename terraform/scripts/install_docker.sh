@@ -1,20 +1,40 @@
 #!/bin/bash
 set -e
 
-# Update the system
-sudo apt-get update -y
+echo "Installing Docker (Ubuntu LTS safe) and Docker Compose v1..."
+
+# Ensure root
+if [ "$EUID" -ne 0 ]; then
+  echo "Run as root (sudo)"
+  exit 1
+fi
+
+# Update system
+apt-get update -y
 
 # Install Docker
-sudo apt-get install -y docker.io
-sudo systemctl start docker
-sudo systemctl enable docker
+apt-get install -y docker.io curl
 
-# Add user to docker group to run commands without sudo
-sudo usermod -aG docker ubuntu
+systemctl start docker
+systemctl enable docker
 
-# Install Docker Compose V2
-mkdir -p ~/.docker/cli-plugins/
-curl -SL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64 -o ~/.docker/cli-plugins/docker-compose
-chmod +x ~/.docker/cli-plugins/docker-compose
+# Allow ubuntu user to run docker
+usermod -aG docker ubuntu || true
 
-echo "Docker Setup Complete.."
+if ! command -v docker-compose >/dev/null 2>&1; then
+  echo "Installing docker-compose v1..."
+  curl -L \
+    "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" \
+    -o /usr/local/bin/docker-compose
+
+  chmod +x /usr/local/bin/docker-compose
+else
+  echo "docker-compose already installed"
+fi
+
+# Verify
+docker --version
+docker-compose --version
+
+echo "Docker and Docker Compose installation completed"
+
