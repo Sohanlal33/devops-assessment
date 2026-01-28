@@ -33,6 +33,8 @@ jobs:
           context: ./backend
           push: true
           tags: ghcr.io/sohanlal33/devops-backend:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Build and push frontend image
         uses: docker/build-push-action@v5
@@ -40,6 +42,8 @@ jobs:
           context: ./frontend
           push: true
           tags: ghcr.io/sohanlal33/devops-frontend:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Deploy using Docker Compose
         run: |
@@ -54,14 +58,10 @@ jobs:
           EOF
 
           ls -l .env
-
-          docker compose pull
-          docker compose up -d
-
+          docker-compose pull
+          docker-compose up -d
           sleep 10
-
           curl -f http://localhost || { echo "Frontend health check failed"; exit 1; }
           curl -f http://localhost:8000/api/hello/ || { echo "Backend health check failed"; exit 1; }
-
           echo "Deployment completed successfully"
 
