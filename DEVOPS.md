@@ -1,58 +1,115 @@
-í¿—ï¸ Enterprise DevOps Assessment: Cloud Infrastructure
-A production-grade, automated deployment ecosystem featuring Infrastructure as Code (IaC), GHCR Integration, and Self-Hosted CI/CD Orchestration.
-í¼ System Architecture & Network Flow
-The project implements a decoupled, secure architecture designed for high availability and minimal attack surface.
-Infrastructure: AWS EC2 (t3.micro) provisioned via Terraform within a secured VPC.
-Edge Routing: Nginx acts as the primary entry point on Host Port 80, handling SSL termination (Roadmap) and static routing.
-Reverse Proxy Logic: Configured to serve React static assets and proxy API requests to the Gunicorn/Django backend over a private internal app_network.
-Deployment: GitHub Actions utilizes a Self-Hosted Runner on the target EC2 to eliminate the need for exposing Port 22 (SSH) to the public internet.
-í» ï¸ Setup & Infrastructure Execution
-1ï¸âƒ£ Provisioning (IaC)
+# ðŸ—ï¸ Enterprise DevOps Assessment: Cloud Infrastructure
+
+A production-grade, automated deployment ecosystem leveraging Infrastructure as Code (IaC), GitHub Container Registry (GHCR), and a self-hosted CI/CD execution model.
+
+---
+
+## ðŸŒ System Architecture & Network Flow
+
+The solution implements a decoupled and security-conscious architecture designed for high availability, operational clarity, and a minimal attack surface.
+
+- **Infrastructure:** AWS EC2 (t3.micro) provisioned using Terraform within a secured VPC.
+- **Edge Routing:** Nginx operates as the primary entry point on Host Port 80, handling static routing and reverse proxy responsibilities.
+- **Reverse Proxy Logic:** Nginx serves React static assets and proxies API requests to the Django backend running on Gunicorn over a private Docker bridge network (`app_network`).
+- **Deployment Model:** GitHub Actions executes via a self-hosted runner on the target EC2 instance, eliminating the need to expose SSH (Port 22) to the public internet.
+
+---
+
+## ðŸ› ï¸ Setup & Infrastructure Execution
+
+### 1ï¸âƒ£ Infrastructure Provisioning (IaC)
+
+```bash
 cd terraform
-cd terraform init          # Initialize provider plugins
+terraform init          # Initialize provider plugins
 terraform plan          # Review execution plan
 terraform apply -auto-approve
 
-í¼ Network Identity & DNS Configuration
-To transition from a raw IP to a production-ready URL, the following networking layer was implemented:
+ðŸŒ Network Identity & DNS Configuration
 
-DNS Mapping: A custom A Record was created pointing nexgensis-assessment.aitoolsbots.xyz to the AWS Elastic IP.
+To transition from a raw IP address to a production-ready domain, the following networking strategy was implemented:
 
-Static Persistence: By utilizing an Elastic IP (EIP), the domain-to-server mapping remains immutable, preventing service disruption during EC2 reboots or maintenance cycles.
+DNS Mapping: A custom A record maps nexgensis-assessment.aitoolsbots.xyz to an AWS Elastic IP.
 
-Routing: Nginx is configured to recognize the server_name header, ensuring traffic for the specific subdomain is routed correctly to the frontend container.
+Static Persistence: Elastic IP ensures the domain remains stable across EC2 restarts and maintenance cycles.
 
-2ï¸âƒ£ Manual Deployment & Verification
+Routing Control: Nginx is configured with an explicit server_name directive to route domain-specific traffic correctly to the frontend container.
+
+ðŸš€ Manual Deployment & Verification (Non-CI)
 git clone https://github.com/Sohanlal33/devops-assessment.git
 cd devops-assessment
 
-# Initialize Environment & Secrets
-cp .env.example .env
+#ensure ubuntu:ubuntu user
 chmod +x deploy.sh
-
-# Atomic Orchestration
 ./deploy.sh
 
+Note: Runtime secrets are injected dynamically during CI/CD execution. No .env.example files are copied or committed.
+
 âš¡ CI/CD & Automation Excellence
-í³¦ Docker Buildx & Intelligent Caching
-The pipeline in .github/workflows/deploy.yml leverages GHA Caching to achieve elite performance:
-Mechanism: cache-from: type=gha and cache-to: type=gha,mode=min.
-Impact: Reduces build times by ~80% by intelligently reusing immutable image layers, essential for resource-constrained t3.micro environments.
-í´ Zero-Trust Secret Management
-Secrets are never stored on-disk in the repository; they are injected strictly at runtime:
-Dynamic Generation: The self-hosted runner generates the .env file on-the-fly using GitHub Secrets.
-Hardened Permissions: The .env is restricted , ensuring only the container-owner can read sensitive credentials.
-í» ï¸ Senior Decisions
-Technical Implementation
-Security-Non-Root Execution: Both Gunicorn and Nginx run as unprivileged users to mitigate container breakout risks.
-Port Logic-Nginx listens on 8080 (to bypass privileged port restrictions) and is bridged to Port 80 via Docker Compose.
-Networking-VPC Isolation: Deployment occurs via a self-hosted runner, keeping the instance private from external SSH probes.
-í´ Troubleshooting Highlight: The Nginx PID Fix
-Issue: Nginx failed with Permission denied while attempting to write to /run/nginx.pid.Cause: Standard Nginx images attempt to write to root-protected directories, which fails under our Non-Root Security Policy.
-Resolution: Re-engineered nginx.conf to use pid /tmp/nginx.pid; and updated the Dockerfile to chown log/cache directories, maintaining high security without sacrificing functionality.
-íº€ Production Readiness & Roadmap
-HTTPS/TLS: Integrate Certbot/Letâ€™s Encrypt for automated 2048-bit RSA certificate renewal.
-Reliability: Implement an AWS Application Load Balancer (ALB) for managed SSL termination and health-check based auto-healing.
-í´— Resource Links
-Live Application: http://nexgensis-assessment.aitoolsbots.xyz/Project 
-Repository: Sohanlal33/devops-assessment
+ðŸ“¦ Docker Buildx & Intelligent Caching
+
+The GitHub Actions pipeline (.github/workflows/deploy.yml) utilizes Buildx with GitHub Actions cache:
+
+Mechanism:
+cache-from: type=gha
+cache-to: type=gha,mode=min
+
+Impact:
+Significantly reduces build time by reusing immutable image layers, critical for resource-constrained environments such as t3.micro instances.
+
+ðŸ” Zero-Trust Secret Management
+
+Secrets are never committed or stored on disk.
+
+GitHub Secrets are injected at runtime during deployment.
+
+The self-hosted runner dynamically generates the .env file with restricted permissions, ensuring only the container runtime can access sensitive values.
+
+ðŸ§  Key Engineering Decisions
+
+Non-Root Execution: Both Gunicorn and Nginx run as unprivileged users to mitigate container escape risks.
+
+Port Strategy: Nginx listens on port 8080 internally to avoid privileged port execution and is mapped to port 80 via Docker Compose.
+
+Network Isolation: CI/CD execution via a self-hosted runner avoids exposing SSH access, reducing the external attack surface.
+
+ðŸ” Troubleshooting Highlight: Nginx PID Handling
+
+Issue: Nginx failed with Permission denied when attempting to write to /run/nginx.pid.
+
+Root Cause: Default Nginx images expect root-level write access, incompatible with non-root execution.
+
+Resolution:
+
+Updated nginx.conf to use pid /tmp/nginx.pid
+
+Adjusted Dockerfile to apply correct ownership on log and cache directories
+This preserved security posture without sacrificing stability.
+
+ðŸ§© System Architecture Diagram
+flowchart LR
+    Developer -->|git push| GitHub
+    GitHub -->|GitHub Actions| Runner[Self-Hosted Runner]
+    Runner -->|Docker Buildx| GHCR[(GitHub Container Registry)]
+    Runner -->|docker-compose| EC2[AWS EC2 Instance]
+
+    EC2 --> Nginx
+    Nginx --> Frontend[React Container]
+    Nginx --> Backend[Django + Gunicorn]
+
+ðŸ“ˆ Production Readiness & Roadmap
+
+HTTPS/TLS: Integrate Letâ€™s Encrypt or ACM for automated certificate management.
+
+Reliability: Introduce AWS Application Load Balancer (ALB) for managed SSL termination and health checks.
+
+Scalability: Migrate workloads to ECS Fargate and persistent storage to Amazon RDS for Multi-AZ resilience.
+
+ðŸ”— Resource Links
+
+Live Application: http://nexgensis-assessment.aitoolsbots.xyz
+
+Source Repository: https://github.com/Sohanlal33/devops-assessment
+
+
+---
